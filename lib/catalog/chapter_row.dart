@@ -37,11 +37,15 @@ class ChapterRow extends StatelessWidget {
                 border: Border(top: BorderSide(color: OmoweColors.stone300)),
               ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
-              width: 16,
+              width: 24,
               child: Text(
                 number.toString().padLeft(2, '0'),
+                maxLines: 1,
+                softWrap: false,
+                textAlign: TextAlign.center,
                 style: OmoweTypography.uiMicro.copyWith(
                   fontFeatures: OmoweTypography.tabularFigures,
                 ),
@@ -54,7 +58,7 @@ class ChapterRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: OmoweTypography.uiBody.copyWith(
-                  fontSize: 13.5,
+                  fontSize: 15,
                   color: state == ChapterState.read
                       ? OmoweColors.ink500
                       : OmoweColors.ink900,
@@ -83,7 +87,7 @@ class _Trailing extends StatelessWidget {
       case ChapterState.current:
         return Text(
           'reading',
-          style: OmoweTypography.uiMicro.copyWith(
+          style: OmoweTypography.uiCaption.copyWith(
             color: OmoweColors.sage700,
             fontWeight: FontWeight.w500,
           ),

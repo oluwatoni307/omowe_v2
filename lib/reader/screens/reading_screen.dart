@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -9,6 +11,7 @@ import '../../theme/omowe_colors.dart';
 import '../../theme/omowe_typography.dart';
 // Adjust these to match your project structure.
 import '../../widgets/staggered_chapter_reveal.dart';
+import '../view_model.dart/book_detail_view_model.dart';
 import '../view_model.dart/chunk_reader_view_model.dart';
 
 /// Reading screen. Wired to
@@ -32,11 +35,13 @@ class ReadingScreen extends ConsumerStatefulWidget {
     super.key,
     required this.bookId,
     required this.chunkIndex,
+    this.initialScrollOffset = 0,
     this.onBack,
   });
 
   final String bookId;
   final int chunkIndex;
+  final double initialScrollOffset;
   final VoidCallback? onBack;
 
   @override
@@ -47,6 +52,10 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen> {
   final _scrollController = ScrollController();
   double _progress = 0;
   bool _markedRead = false;
+  bool _showContinue = false;
+  bool _isAdvancing = false;
+  bool _restoredOffset = false;
+  Timer? _saveOffsetTimer;
 
   @override
   void initState() {
@@ -63,8 +72,18 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen> {
       setState(() => _progress = value);
     }
 
-    if (!_markedRead && position.extentAfter < 40) {
-      _markedRead = true;
+    final atEnd = position.extentAfter < 40;
+    if (atEnd != _showContinue) {
+      setState(() => _showContinue = atEnd);
+    }
+
+    if (!_markedRead && atEnd) {
+      _markRead();
+    }
+
+    _saveOffsetTimer?.cancel();
+    _saveOffsetTimer = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
       ref
           .read(
             chunkReaderViewModelProvider(
@@ -72,12 +91,51 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen> {
               widget.chunkIndex,
             ).notifier,
           )
-          .markRead();
-    }
+          .saveScrollOffset(position.pixels);
+    });
+  }
+
+  void _markRead() {
+    _markedRead = true;
+    ref
+        .read(
+          chunkReaderViewModelProvider(
+            widget.bookId,
+            widget.chunkIndex,
+          ).notifier,
+        )
+        .markRead();
+  }
+
+  Future<void> _continueToNextChunk() async {
+    if (_isAdvancing) return;
+    setState(() => _isAdvancing = true);
+    if (!_markedRead) _markRead();
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => ReadingScreen(
+          bookId: widget.bookId,
+          chunkIndex: widget.chunkIndex + 1,
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _saveOffsetTimer?.cancel();
+    if (_scrollController.hasClients) {
+      ref
+          .read(
+            chunkReaderViewModelProvider(
+              widget.bookId,
+              widget.chunkIndex,
+            ).notifier,
+          )
+          .saveScrollOffset(_scrollController.position.pixels);
+    }
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -88,12 +146,25 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen> {
     final chunkAsync = ref.watch(
       chunkReaderViewModelProvider(widget.bookId, widget.chunkIndex),
     );
+    final detailAsync = ref.watch(bookDetailViewModelProvider(widget.bookId));
+    final hasNextChunk = detailAsync.maybeWhen(
+      data: (book) =>
+          book != null && widget.chunkIndex + 1 < book.chunks.length,
+      orElse: () => false,
+    );
 
     return Scaffold(
       backgroundColor: OmoweColors.stone50,
+      floatingActionButton: _showContinue && hasNextChunk
+          ? FloatingActionButton.extended(
+              onPressed: _isAdvancing ? null : _continueToNextChunk,
+              label: const Text('Continue to next section'),
+              icon: const Icon(Icons.arrow_forward),
+            )
+          : null,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -111,6 +182,19 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen> {
                         ),
                       );
                     }
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted && _scrollController.hasClients) {
+                        if (!_restoredOffset) {
+                          _restoredOffset = true;
+                          final offset = widget.initialScrollOffset.clamp(
+                            0.0,
+                            _scrollController.position.maxScrollExtent,
+                          );
+                          if (offset > 0) _scrollController.jumpTo(offset);
+                        }
+                        _onScroll();
+                      }
+                    });
                     return _ChunkBody(
                       chunk: chunk,
                       chunkIndex: widget.chunkIndex,
@@ -155,8 +239,9 @@ class _ChunkBody extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Chapter ${chunkIndex + 1}', style: OmoweTypography.uiEyebrow),
-            Text(chunk.title, style: OmoweTypography.displayOnDevice(size: 21)),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
+            Text(chunk.title, style: OmoweTypography.displayOnDevice(size: 23)),
+            const SizedBox(height: 24),
             Text(
               'This chapter has no content yet.',
               style: OmoweTypography.uiCaption,
@@ -171,15 +256,17 @@ class _ChunkBody extends StatelessWidget {
       child: StaggeredChapterReveal(
         children: [
           Text('Chapter ${chunkIndex + 1}', style: OmoweTypography.uiEyebrow),
-          Text(chunk.title, style: OmoweTypography.displayOnDevice(size: 21)),
+          const SizedBox(height: 12),
+          Text(chunk.title, style: OmoweTypography.displayOnDevice(size: 23)),
+          const SizedBox(height: 24),
           MarkdownBody(
             data: chunk.content,
             styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
                 .copyWith(
                   p: OmoweTypography.readingBody,
-                  h1: OmoweTypography.displayOnDevice(size: 24),
-                  h2: OmoweTypography.displayOnDevice(size: 21),
-                  h3: OmoweTypography.displayOnDevice(size: 18),
+                  h1: OmoweTypography.displayOnDevice(size: 28),
+                  h2: OmoweTypography.displayOnDevice(size: 25),
+                  h3: OmoweTypography.displayOnDevice(size: 22),
                 ),
           ),
         ],

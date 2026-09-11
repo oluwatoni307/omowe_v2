@@ -24,7 +24,7 @@ import 'reading_screen.dart';
 /// ([ContinueReadingInfo]) points at *this* book. If it points
 /// elsewhere (or there's nothing in progress), no row is marked
 /// current — all chapters render as plain read/unread.
-class BookScreen extends StatelessWidget {
+class BookScreen extends ConsumerWidget {
   const BookScreen({
     super.key,
     required this.bookId,
@@ -39,12 +39,17 @@ class BookScreen extends StatelessWidget {
   final VoidCallback? onBack;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: OmoweColors.stone50,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _confirmDelete(context, ref),
+        icon: const Icon(Icons.delete_outline),
+        label: const Text('Delete book'),
+      ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -59,6 +64,41 @@ class BookScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete book?'),
+        content: const Text(
+          'This will remove the book and all of its chapters from your library.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true || !context.mounted) return;
+
+    try {
+      await ref.read(bookDetailViewModelProvider(bookId).notifier).deleteBook();
+      if (context.mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not delete this book.')),
+        );
+      }
+    }
   }
 }
 

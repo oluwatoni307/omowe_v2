@@ -43,7 +43,7 @@ class ResumePillButton extends StatelessWidget {
                 label,
                 style: OmoweTypography.uiLabel.copyWith(
                   color: OmoweColors.stone50,
-                  fontSize: compact ? 12 : 13,
+                  fontSize: compact ? 13 : 14,
                 ),
               ),
               const SizedBox(width: 6),

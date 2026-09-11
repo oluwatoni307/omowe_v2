@@ -41,15 +41,18 @@ class LibraryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final horizontalPadding = width < 600 ? 16.0 : 24.0;
+
     return Scaffold(
       backgroundColor: OmoweColors.stone50,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               LibraryTopBar(
                 onSearch: onSearch,
                 onAdd: () {
@@ -84,12 +87,19 @@ class _ContinueReadingSection extends ConsumerWidget {
       data: (info) {
         if (info == null) return const SizedBox(height: 24);
         return Padding(
-          padding: const EdgeInsets.only(top: 24, bottom: 20),
+          padding: const EdgeInsets.only(top: 18, bottom: 16),
           child: ContinueReadingHero(
             bookTitle: info.bookTitle,
             chunkTitle: info.chunkTitle,
             chunksLeft: info.chunksLeft,
-            tintIndex: tintIndexForBookId(info.bookId),
+            onTap: () {
+              onOpenBook?.call(info.bookId);
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BookScreen(bookId: info.bookId),
+                ),
+              );
+            },
             onResume: () {
               onOpenBook?.call(info.bookId);
               Navigator.of(context).push(
@@ -97,6 +107,7 @@ class _ContinueReadingSection extends ConsumerWidget {
                   builder: (_) => ReadingScreen(
                     bookId: info.bookId,
                     chunkIndex: info.chunkIndex,
+                    initialScrollOffset: info.scrollOffset,
                   ),
                 ),
               );
@@ -107,7 +118,7 @@ class _ContinueReadingSection extends ConsumerWidget {
       // A quiet placeholder the same rough height as the hero, not a
       // spinner — keeps the library grid below from jumping once
       // this resolves.
-      loading: () => const SizedBox(height: 24 + 120 + 20),
+      loading: () => const SizedBox(height: 18 + 120 + 16),
       // The hero is a nice-to-have, not essential — fail quietly
       // rather than show an error where a card would be.
       error: (e, st) => const SizedBox(height: 24),
@@ -167,33 +178,41 @@ class _LibraryGrid extends ConsumerWidget {
             ),
           );
         }
-        return GridView.builder(
-          padding: const EdgeInsets.only(bottom: 22),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 14,
-            crossAxisSpacing: 12,
-            // Cover (6:7) plus the caption line beneath it — eyeballed,
-            // tune once real covers are on screen.
-            childAspectRatio: 0.78,
-          ),
-          itemCount: books.length,
-          itemBuilder: (context, index) {
-            final book = books[index];
-            return GestureDetector(
-              onTap: () {
-                onOpenBook?.call(book.id);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => BookScreen(bookId: book.id),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth >= 700
+                ? 4
+                : constraints.maxWidth >= 520
+                ? 3
+                : 2;
+
+            return GridView.builder(
+              padding: const EdgeInsets.only(bottom: 22),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 12,
+                childAspectRatio: crossAxisCount == 2 ? 1.12 : 1.18,
+              ),
+              itemCount: books.length,
+              itemBuilder: (context, index) {
+                final book = books[index];
+                return GestureDetector(
+                  onTap: () {
+                    onOpenBook?.call(book.id);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => BookScreen(bookId: book.id),
+                      ),
+                    );
+                  },
+                  child: LibraryCoverTile(
+                    title: book.title,
+                    unreadCount: book.unreadChunkCount,
+                    tintIndex: tintIndexForBookId(book.id),
                   ),
                 );
               },
-              child: LibraryCoverTile(
-                title: book.title,
-                unreadCount: book.unreadChunkCount,
-                tintIndex: tintIndexForBookId(book.id),
-              ),
             );
           },
         );

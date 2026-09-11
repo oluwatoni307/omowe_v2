@@ -2,6 +2,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../models/book.dart';
 import '../../app_providers.dart';
+import 'home_view_model.dart';
+import 'library_view_model.dart';
 
 part 'view_model_generated/book_detail_view_model.g.dart';
 
@@ -25,5 +27,12 @@ class BookDetailViewModel extends _$BookDetailViewModel {
   Future<void> refresh() async {
     ref.invalidateSelf();
     await future;
+  }
+
+  Future<void> deleteBook() async {
+    final repo = ref.read(fileProcessingRepositoryProvider);
+    await repo.deleteBook(bookId);
+    ref.invalidate(libraryViewModelProvider);
+    ref.invalidate(homeViewModelProvider);
   }
 }

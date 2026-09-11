@@ -28,7 +28,7 @@ class BookCover extends StatelessWidget {
         OmoweColors.coverTints[tintIndex % OmoweColors.coverTints.length];
 
     return AspectRatio(
-      aspectRatio: 6 / 7,
+      aspectRatio: 2.35 / 1,
       child: Container(
         decoration: ShapeDecoration(
           color: bg,
@@ -43,7 +43,7 @@ class BookCover extends StatelessWidget {
                 title,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: OmoweTypography.displayOnDevice(size: 13.5),
+                style: OmoweTypography.displayOnDevice(size: 16),
               )
             : null,
       ),

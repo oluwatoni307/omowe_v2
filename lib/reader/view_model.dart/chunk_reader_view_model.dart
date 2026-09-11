@@ -36,4 +36,13 @@ class ChunkReaderViewModel extends _$ChunkReaderViewModel {
     ref.invalidate(homeViewModelProvider);
     await future;
   }
+
+  Future<void> saveScrollOffset(double scrollOffset) {
+    final repo = ref.read(fileProcessingRepositoryProvider);
+    return repo.saveLastReadPosition(
+      bookId,
+      chunkIndex,
+      scrollOffset: scrollOffset,
+    );
+  }
 }

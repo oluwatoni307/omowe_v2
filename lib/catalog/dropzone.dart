@@ -41,18 +41,18 @@ class DropZone extends StatelessWidget {
               ),
               const SizedBox(height: 9),
               Text(
-                'Drop a file here',
-                style: OmoweTypography.uiLabel.copyWith(fontSize: 13.5),
+                'Choose processed JSON',
+                style: OmoweTypography.uiLabel.copyWith(fontSize: 15),
               ),
               const SizedBox(height: 2),
               Text(
                 'or browse your device',
-                style: OmoweTypography.uiCaption.copyWith(fontSize: 11.5),
+                style: OmoweTypography.uiCaption.copyWith(fontSize: 13),
               ),
               const SizedBox(height: 2),
               Text(
-                'PDF · up to 50MB',
-                style: OmoweTypography.uiMicro.copyWith(fontSize: 10.5),
+                'Book JSON · read offline',
+                style: OmoweTypography.uiMicro.copyWith(fontSize: 12),
               ),
             ],
           ),

@@ -4,4 +4,5 @@ typedef ContinueReadingInfo = ({
   int chunkIndex,
   String chunkTitle,
   int chunksLeft,
+  double scrollOffset,
 });

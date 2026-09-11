@@ -23,7 +23,7 @@ class BookHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 64,
+          width: 76,
           child: BookCover(
             title: title,
             tintIndex: tintIndex,
@@ -35,7 +35,7 @@ class BookHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: OmoweTypography.displayOnDevice(size: 20)),
+              Text(title, style: OmoweTypography.displayOnDevice(size: 22)),
               const SizedBox(height: 4),
               Text('$chunkCount chapters', style: OmoweTypography.uiCaption),
             ],

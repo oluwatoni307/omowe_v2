@@ -47,6 +47,18 @@ class UploadViewModel extends _$UploadViewModel {
     }
   }
 
+  Future<void> importBook(Book book) async {
+    state = const AsyncLoading();
+    final repo = ref.read(fileProcessingRepositoryProvider);
+
+    state = await AsyncValue.guard(() => repo.importBook(book));
+
+    if (state.hasValue) {
+      ref.invalidate(libraryViewModelProvider);
+      ref.invalidate(homeViewModelProvider);
+    }
+  }
+
   // reset() → back to idle, e.g. after showing a success message
   void reset() {
     state = const AsyncData(null);

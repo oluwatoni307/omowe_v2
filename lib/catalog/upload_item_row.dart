@@ -74,12 +74,12 @@ class _Meta extends StatelessWidget {
   Widget build(BuildContext context) {
     final titleStyle = state == UploadState.transferring
         ? OmoweTypography.uiBody.copyWith(
-            fontSize: 12.5,
+            fontSize: 14,
             fontStyle: FontStyle.italic,
             color: OmoweColors.ink500,
           )
         : OmoweTypography.uiBody.copyWith(
-            fontSize: 12.5,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
           );
 

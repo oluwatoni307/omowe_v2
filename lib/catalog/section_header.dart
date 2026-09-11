@@ -20,11 +20,11 @@ class SectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
       children: [
-        Text(label, style: OmoweTypography.uiLabel.copyWith(fontSize: 12.5)),
+        Text(label, style: OmoweTypography.uiLabel.copyWith(fontSize: 16)),
         if (trailing != null)
           Text(
             trailing!,
-            style: OmoweTypography.uiCaption.copyWith(fontSize: 11.5),
+            style: OmoweTypography.uiCaption.copyWith(fontSize: 13),
           ),
       ],
     );

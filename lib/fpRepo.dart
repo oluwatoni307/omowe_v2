@@ -27,12 +27,24 @@ class FileProcessingRepository {
     return book;
   }
 
+  Future<Book> importBook(Book book) async {
+    if (book.chunks.isEmpty) {
+      throw const FormatException('The JSON contains no readable chapters');
+    }
+    await storageService.put('books', book.id, book.toJson());
+    return book;
+  }
+
   // getBook('b1') → Book(id: 'b1', title: 'Dart Basics', chunks: [...])
   // getBook('missing') → null
   Future<Book?> getBook(String id) async {
     final json = await storageService.get('books', id);
     if (json == null) return null;
     return Book.fromJson(json);
+  }
+
+  Future<void> deleteBook(String bookId) async {
+    await storageService.delete('books', bookId);
   }
 
   // getAllBooks() → [Book(...), Book(...)]
@@ -95,10 +107,15 @@ class FileProcessingRepository {
   }
 
   // Saves the last accessed book & chunk indices to lightweight key-value storage
-  Future<void> saveLastReadPosition(String bookId, int chunkIndex) async {
+  Future<void> saveLastReadPosition(
+    String bookId,
+    int chunkIndex, {
+    double scrollOffset = 0,
+  }) async {
     await storageService.put('app_state', 'last_read', {
       'bookId': bookId,
       'chunkIndex': chunkIndex,
+      'scrollOffset': scrollOffset,
       'updatedAt': DateTime.now().toIso8601String(),
     });
   }
@@ -113,6 +130,7 @@ class FileProcessingRepository {
     final bookId = state['bookId'] as String?;
     final chunkIndex = state['chunkIndex'] as int?;
     if (bookId == null || chunkIndex == null) return null;
+    final scrollOffset = (state['scrollOffset'] as num?)?.toDouble() ?? 0;
 
     final book = await getBook(bookId);
     if (book == null) return null;
@@ -127,6 +145,7 @@ class FileProcessingRepository {
       chunkIndex: chunkIndex,
       chunkTitle: chunk.title,
       chunksLeft: remaining < 0 ? 0 : remaining,
+      scrollOffset: scrollOffset,
     );
   }
 }

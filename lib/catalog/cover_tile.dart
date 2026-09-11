@@ -26,7 +26,7 @@ class LibraryCoverTile extends StatelessWidget {
       children: [
         BookCover(title: title, tintIndex: tintIndex),
         const SizedBox(height: 5),
-        Text('$unreadCount unread', style: OmoweTypography.uiMicro),
+        Text('$unreadCount unread', style: OmoweTypography.uiCaption),
       ],
     );
   }

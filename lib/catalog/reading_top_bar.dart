@@ -16,7 +16,7 @@ class ReadingTopBar extends StatelessWidget {
       children: [
         OmoweBackButton(onPressed: onBack),
         const SizedBox(width: 14),
-        SizedBox(width: 84, child: ThinProgressBar(value: progress)),
+        Expanded(child: ThinProgressBar(value: progress)),
       ],
     );
   }

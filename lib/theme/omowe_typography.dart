@@ -23,7 +23,9 @@ class OmoweTypography {
 
   /// Shared tabular-figures feature list, for the numeric contexts that
   /// need it — see [uiMicro]'s doc comment for which ones do.
-  static const List<FontFeature> tabularFigures = [FontFeature.tabularFigures()];
+  static const List<FontFeature> tabularFigures = [
+    FontFeature.tabularFigures(),
+  ];
 
   // ---- Display / Fraunces ----
 
@@ -57,11 +59,11 @@ class OmoweTypography {
   /// actually used at (15.5–21px) — `height: 1.15` is a chosen default for
   /// titles that wrap to two lines, not a transcribed value.
   static TextStyle displayOnDevice({double size = 21}) => GoogleFonts.fraunces(
-        fontSize: size,
-        fontWeight: FontWeight.w500,
-        height: 1.15,
-        color: OmoweColors.ink900,
-      );
+    fontSize: size,
+    fontWeight: FontWeight.w500,
+    height: 1.15,
+    color: OmoweColors.ink900,
+  );
 
   /// Oversized initial letter for a chapter's opening paragraph. Pair with
   /// a leading [TextSpan] in a [RichText] — Flutter has no native
@@ -79,8 +81,8 @@ class OmoweTypography {
   /// The book text itself. Use inside a column no wider than ~60 characters
   /// — the line height here assumes that measure.
   static TextStyle readingBody = GoogleFonts.literata(
-    fontSize: 16.5,
-    height: 1.65,
+    fontSize: 19,
+    height: 1.75,
     color: OmoweColors.ink900,
   );
 
@@ -97,7 +99,7 @@ class OmoweTypography {
 
   /// General UI body text — anywhere [uiLabel] would feel too heavy.
   static TextStyle uiBody = GoogleFonts.inter(
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w400,
     color: OmoweColors.ink900,
   );
@@ -105,7 +107,7 @@ class OmoweTypography {
   /// Buttons, nav items, and anything else that needs to read as
   /// actionable rather than informational.
   static TextStyle uiLabel = GoogleFonts.inter(
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: FontWeight.w500,
     color: OmoweColors.ink900,
   );
@@ -119,7 +121,7 @@ class OmoweTypography {
   /// this bare — [uiMicro] plus an explicit `fontSize` override is usually
   /// the right call for anything genuinely small or numeric.
   static TextStyle uiCaption = GoogleFonts.inter(
-    fontSize: 12.5,
+    fontSize: 14.5,
     fontWeight: FontWeight.w400,
     color: OmoweColors.ink500,
   );
@@ -127,7 +129,7 @@ class OmoweTypography {
   /// Small standalone labels, e.g. a page kicker above a title.
   /// Letter-spacing is exact: the source's `0.02em` at 13px is 0.26.
   static TextStyle uiKicker = GoogleFonts.inter(
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: FontWeight.w400,
     color: OmoweColors.ink500,
     letterSpacing: 0.26,
@@ -146,7 +148,7 @@ class OmoweTypography {
   /// Add it explicitly where the source specifies it:
   /// `uiMicro.copyWith(fontFeatures: const [FontFeature.tabularFigures()])`.
   static TextStyle uiMicro = GoogleFonts.inter(
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: FontWeight.w400,
     color: OmoweColors.ink500,
   );
@@ -154,7 +156,7 @@ class OmoweTypography {
   /// Tag-style text above a hero element, e.g. "continue reading". Colored
   /// [OmoweColors.sage600] to read as accent rather than primary content.
   static TextStyle uiEyebrow = GoogleFonts.inter(
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: FontWeight.w400,
     color: OmoweColors.sage600,
   );

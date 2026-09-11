@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../config.dart';
 import 'ingestService.dart';
@@ -12,15 +12,21 @@ import '../../models/chunk.dart';
 // Sends the PDF as multipart/form-data (raw bytes, not base64) since this
 // is talking to our own backend, not an AI API directly.
 class HttpIngestService implements IngestService {
+  static const _requestTimeout = Duration(minutes: 10);
+
   @override
   Future<Book> ingest(Uint8List pdfBytes) async {
+    debugPrint('POST ${AppConfig.runBookEndpoint} (${pdfBytes.length} bytes)');
     final request = http.MultipartRequest('POST', AppConfig.runBookEndpoint)
       ..files.add(
         http.MultipartFile.fromBytes('file', pdfBytes, filename: 'upload.pdf'),
       );
 
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
+    final streamed = await request.send().timeout(_requestTimeout);
+    final response = await http.Response.fromStream(
+      streamed,
+    ).timeout(_requestTimeout);
+    debugPrint('Ingest response: ${response.statusCode}');
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Ingest failed: ${response.statusCode} ${response.body}');
