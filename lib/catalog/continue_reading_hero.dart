@@ -51,7 +51,12 @@ class ContinueReadingHero extends StatelessWidget {
             children: [
               Text('continue reading', style: OmoweTypography.uiEyebrow),
               const SizedBox(height: 8),
-              Text(bookTitle, style: OmoweTypography.displayOnDevice(size: 21)),
+              Text(
+                bookTitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: OmoweTypography.displayOnDevice(size: 21),
+              ),
               const SizedBox(height: 3),
               Text(
                 chunkTitle,
@@ -59,12 +64,19 @@ class ContinueReadingHero extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    '$chunksLeft chapters left',
-                    style: OmoweTypography.uiBody.copyWith(
-                      fontFeatures: OmoweTypography.tabularFigures,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Text(
+                        '$chunksLeft chapters left',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: OmoweTypography.uiBody.copyWith(
+                          fontFeatures: OmoweTypography.tabularFigures,
+                        ),
+                      ),
                     ),
                   ),
                   ResumePillButton(

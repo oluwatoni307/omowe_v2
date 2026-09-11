@@ -41,7 +41,7 @@ class BookCover extends StatelessWidget {
         child: showTitle
             ? Text(
                 title,
-                maxLines: 3,
+                maxLines: 4,
                 overflow: TextOverflow.ellipsis,
                 style: OmoweTypography.displayOnDevice(size: 16),
               )
