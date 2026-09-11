@@ -235,6 +235,7 @@ class _ChunkBody extends StatelessWidget {
     if (chunk.content.trim().isEmpty) {
       return SingleChildScrollView(
         controller: scrollController,
+        padding: const EdgeInsets.only(bottom: 128),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -253,6 +254,7 @@ class _ChunkBody extends StatelessWidget {
 
     return SingleChildScrollView(
       controller: scrollController,
+      padding: const EdgeInsets.only(bottom: 128),
       child: StaggeredChapterReveal(
         children: [
           Text('Chapter ${chunkIndex + 1}', style: OmoweTypography.uiEyebrow),

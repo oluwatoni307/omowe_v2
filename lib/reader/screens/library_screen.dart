@@ -6,6 +6,7 @@ import '../../catalog/cover_tile.dart';
 import '../../catalog/pill_button.dart';
 import '../../catalog/section_header.dart';
 import '../../theme/omowe_colors.dart';
+import '../../theme/omowe_shapes.dart';
 import '../../theme/omowe_typography.dart';
 import '../view_model.dart/home_view_model.dart';
 import '../view_model.dart/library_view_model.dart';
@@ -85,7 +86,12 @@ class _ContinueReadingSection extends ConsumerWidget {
 
     return continueAsync.when(
       data: (info) {
-        if (info == null) return const SizedBox(height: 24);
+        if (info == null) {
+          return const Padding(
+            padding: EdgeInsets.only(top: 18, bottom: 16),
+            child: _ContinueReadingEmptyState(),
+          );
+        }
         return Padding(
           padding: const EdgeInsets.only(top: 18, bottom: 16),
           child: ContinueReadingHero(
@@ -122,6 +128,40 @@ class _ContinueReadingSection extends ConsumerWidget {
       // The hero is a nice-to-have, not essential — fail quietly
       // rather than show an error where a card would be.
       error: (e, st) => const SizedBox(height: 24),
+    );
+  }
+}
+
+class _ContinueReadingEmptyState extends StatelessWidget {
+  const _ContinueReadingEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(17, 16, 17, 17),
+      decoration: ShapeDecoration(
+        color: OmoweColors.sageWash,
+        shape: OmoweShapes.cardShape.copyWith(
+          side: const BorderSide(color: OmoweColors.sage400),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('continue reading', style: OmoweTypography.uiEyebrow),
+          const SizedBox(height: 7),
+          Text(
+            'Your next chapter will appear here.',
+            style: OmoweTypography.displayOnDevice(size: 19),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Open a book and start reading to pick up where you left off.',
+            style: OmoweTypography.uiBody.copyWith(color: OmoweColors.ink500),
+          ),
+        ],
+      ),
     );
   }
 }
