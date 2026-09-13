@@ -230,7 +230,7 @@ class _LibraryGrid extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 22),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 16,
+                mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: crossAxisCount == 2 ? 1.12 : 1.18,
               ),

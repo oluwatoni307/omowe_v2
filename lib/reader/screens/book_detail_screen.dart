@@ -9,7 +9,6 @@ import '../../models/book.dart';
 import '../../theme/omowe_colors.dart';
 import '../../theme/omowe_typography.dart';
 import '../view_model.dart/book_detail_view_model.dart';
-
 import '../view_model.dart/home_view_model.dart';
 import 'book_tint.dart';
 import 'reading_screen.dart';
@@ -18,12 +17,6 @@ import 'reading_screen.dart';
 /// (family, keyed on [bookId]) for the chapter data, and cross-checks
 /// [homeViewModelProvider] to know which chapter — if any — is
 /// "current."
-///
-/// Assumption, flagged rather than guessed silently: a chapter only
-/// shows as "current" when the app-wide continue-reading pointer
-/// ([ContinueReadingInfo]) points at *this* book. If it points
-/// elsewhere (or there's nothing in progress), no row is marked
-/// current — all chapters render as plain read/unread.
 class BookScreen extends ConsumerWidget {
   const BookScreen({
     super.key,
@@ -112,8 +105,6 @@ class _BookBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detailAsync = ref.watch(bookDetailViewModelProvider(bookId));
 
-    // Non-essential to this screen rendering — read quietly, never
-    // block or error the page over it.
     final continueInfo = ref
         .watch(homeViewModelProvider)
         .maybeWhen(data: (info) => info, orElse: () => null);
@@ -140,10 +131,14 @@ class _BookBody extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BookHeader(
-                title: detail.title,
-                chunkCount: 0,
-                tintIndex: tintIndexForBookId(detail.id),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _showEditTitleDialog(context, ref, detail.title),
+                child: BookHeader(
+                  title: detail.title,
+                  chunkCount: 0,
+                  tintIndex: tintIndexForBookId(detail.id),
+                ),
               ),
               Expanded(
                 child: Center(
@@ -162,10 +157,14 @@ class _BookBody extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            BookHeader(
-              title: detail.title,
-              chunkCount: detail.chunks.length,
-              tintIndex: tintIndexForBookId(detail.id),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _showEditTitleDialog(context, ref, detail.title),
+              child: BookHeader(
+                title: detail.title,
+                chunkCount: detail.chunks.length,
+                tintIndex: tintIndexForBookId(detail.id),
+              ),
             ),
             const SizedBox(height: 14),
             BookProgressRow(
@@ -228,9 +227,54 @@ class _BookBody extends ConsumerWidget {
     );
   }
 
-  /// Where "Continue reading" sends you: the cross-checked current
-  /// index if it applies here, else the first unread chunk, else 0
-  /// (book fully read — reopen from the start).
+  Future<void> _showEditTitleDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String currentTitle,
+  ) async {
+    final controller = TextEditingController(text: currentTitle);
+
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Book Title'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(hintText: 'Enter new title'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (newTitle != null &&
+        newTitle.isNotEmpty &&
+        newTitle != currentTitle &&
+        context.mounted) {
+      try {
+        await ref
+            .read(bookDetailViewModelProvider(bookId).notifier)
+            .updateTitle(newTitle);
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not update title.')),
+          );
+        }
+      }
+    }
+  }
+
   int _resumeIndex(BookDetail detail, int? currentChunkIndex) {
     if (currentChunkIndex != null) return currentChunkIndex;
     final firstUnread = detail.chunks.indexWhere((c) => !c.isRead);

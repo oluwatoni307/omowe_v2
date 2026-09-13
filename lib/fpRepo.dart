@@ -148,4 +148,23 @@ class FileProcessingRepository {
       scrollOffset: scrollOffset,
     );
   }
+
+  // updateBookTitle('b1', 'New Title')
+  //   1. fetches existing book from storage
+  //   2. creates updated Book instance with new title
+  //   3. persists back to storage
+  Future<Book?> updateBookTitle(String bookId, String newTitle) async {
+    final book = await getBook(bookId);
+    if (book == null) return null;
+
+    final updatedBook = Book(
+      id: book.id,
+      title: newTitle,
+      active: book.active,
+      chunks: book.chunks,
+    );
+
+    await storageService.put('books', updatedBook.id, updatedBook.toJson());
+    return updatedBook;
+  }
 }

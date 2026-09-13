@@ -35,4 +35,14 @@ class BookDetailViewModel extends _$BookDetailViewModel {
     ref.invalidate(libraryViewModelProvider);
     ref.invalidate(homeViewModelProvider);
   }
+
+  Future<void> updateTitle(String newTitle) async {
+    final repo = ref.read(fileProcessingRepositoryProvider);
+    // Note: You will need to ensure updateBookTitle exists on your repository
+    await repo.updateBookTitle(bookId, newTitle);
+    ref.invalidateSelf();
+    ref.invalidate(libraryViewModelProvider);
+    ref.invalidate(homeViewModelProvider);
+    await future;
+  }
 }

@@ -14,28 +14,6 @@ import '../view_model.dart/upload_view_model.dart';
 
 import 'book_detail_screen.dart';
 
-/// "recently added" list, since [UploadViewModel] only tracks a
-/// single in-flight upload (`AsyncValue<Book?>`, not a list).
-///
-/// Decisions made here that weren't spec — flagged, not silent:
-///
-/// - No `UploadState.transferring` is ever shown. `uploadPdf()` has
-///   no byte-level progress callback, only a loading boolean, so the
-///   row goes straight from nothing to `processing` (spinner) to
-///   `ready`. Add a progress stream later if chunked upload progress
-///   becomes available.
-/// - The filename shown while uploading isn't part of the view
-///   model's state (`uploadPdf` takes raw bytes, not a `PlatformFile`)
-///   — it's captured as local screen state at pick-time, purely for
-///   display.
-/// - `AsyncError` doesn't try to fit into [UploadItemRow]'s state
-///   enum (no error variant exists there) — it renders as a separate
-///   inline message instead.
-/// - After success, nothing auto-navigates or auto-resets — the
-///   "ready" row stays until the user taps "Upload another," which
-///   calls `reset()`.
-/// - This screen imports processed JSON so the long-running backend pipeline
-///   can be run separately and the app can read the result offline.
 class UploadScreen extends ConsumerStatefulWidget {
   const UploadScreen({super.key, this.onBack});
 
@@ -51,8 +29,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   Future<void> _pickAndImport() async {
     try {
       final result = await FilePicker.pickFiles(type: FileType.any);
-      final file = result.isEmpty ? null : result.single;
-      if (file == null) return;
+      if (result.isEmpty) return;
+      final file = result.single;
 
       final bytes = await file.xFile.readAsBytes();
       if (bytes.isEmpty) {
@@ -147,8 +125,18 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
         map['piece'] ??
         map['piece_content'];
     if (content != null && content.toString().trim().isNotEmpty) {
+      final explanation =
+          map['aiExplanation'] ??
+          map['ai_explanation'] ??
+          map['explanation'] ??
+          map['ai_summary'];
+
       return [
-        Chunk(title: title ?? 'Untitled chapter', content: content.toString()),
+        Chunk(
+          title: title ?? 'Untitled chapter',
+          content: content.toString(),
+          aiExplanation: explanation?.toString(),
+        ),
       ];
     }
 
@@ -194,11 +182,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               uploadState.when(
                 data: (book) => book == null
                     ? _IdleUploadArea(onTap: _pickAndImport)
-                    : _SuccessArea(
-                        bookId: book.id,
-                        title: book.title,
-                        onUploadAnother: _reset,
-                      ),
+                    : _SuccessArea(book: book, onUploadAnother: _reset),
                 loading: () => UploadItemRow(
                   title: _pickedFileName ?? 'Uploading…',
                   state: UploadState.processing,
@@ -251,30 +235,24 @@ class _IdleUploadArea extends StatelessWidget {
   }
 }
 
-class _SuccessArea extends StatelessWidget {
-  const _SuccessArea({
-    required this.bookId,
-    required this.title,
-    required this.onUploadAnother,
-  });
+class _SuccessArea extends ConsumerWidget {
+  const _SuccessArea({required this.book, required this.onUploadAnother});
 
-  final String bookId;
-  final String title;
+  final Book book;
   final VoidCallback onUploadAnother;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => BookScreen(bookId: bookId))),
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _showEditTitleDialog(context, ref, book.title),
           child: UploadItemRow(
-            title: title,
+            title: book.title,
             state: UploadState.ready,
-            subtitle: 'Ready to read',
+            subtitle: 'Tap title to edit • Ready to read',
           ),
         ),
         const SizedBox(height: 16),
@@ -282,14 +260,60 @@ class _SuccessArea extends StatelessWidget {
           label: 'Open book',
           icon: Icons.arrow_forward,
           variant: OmowePillVariant.sage,
-          onPressed: () => Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => BookScreen(bookId: bookId))),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => BookScreen(bookId: book.id)),
+          ),
         ),
         const SizedBox(height: 10),
         OmowePillButton(label: 'Upload another', onPressed: onUploadAnother),
       ],
     );
+  }
+
+  Future<void> _showEditTitleDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String currentTitle,
+  ) async {
+    final controller = TextEditingController(text: currentTitle);
+
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Book Title'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(hintText: 'Enter new title'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (newTitle != null &&
+        newTitle.isNotEmpty &&
+        newTitle != currentTitle &&
+        context.mounted) {
+      try {
+        await ref.read(uploadViewModelProvider.notifier).updateTitle(newTitle);
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not update title.')),
+          );
+        }
+      }
+    }
   }
 }
 

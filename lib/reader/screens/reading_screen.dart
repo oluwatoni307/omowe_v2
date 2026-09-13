@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -263,15 +265,88 @@ class _ChunkBody extends StatelessWidget {
           const SizedBox(height: 24),
           MarkdownBody(
             data: chunk.content,
-            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-                .copyWith(
-                  p: OmoweTypography.readingBody,
-                  h1: OmoweTypography.displayOnDevice(size: 28),
-                  h2: OmoweTypography.displayOnDevice(size: 25),
-                  h3: OmoweTypography.displayOnDevice(size: 22),
-                ),
+            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+              p: OmoweTypography.readingBody.copyWith(
+                height: 1.55, // Improves readability for dense academic prose
+              ),
+              h1: OmoweTypography.displayOnDevice(size: 28),
+              h2: OmoweTypography.displayOnDevice(size: 25),
+              h3: OmoweTypography.displayOnDevice(size: 22),
+              blockSpacing: 18.0,
+              h1Padding: const EdgeInsets.only(top: 24, bottom: 8),
+              h2Padding: const EdgeInsets.only(top: 20, bottom: 8),
+              h3Padding: const EdgeInsets.only(top: 16, bottom: 6),
+              // Ensures bold inline headers stand out if used as pseudo-headers
+              strong: OmoweTypography.readingBody.copyWith(
+                fontWeight: FontWeight.w700,
+                color: OmoweColors.ink900,
+              ),
+            ),
           ),
+
+          // Inside _ChunkBody children list, directly below MarkdownBody:
+          if (chunk.aiExplanation != null &&
+              chunk.aiExplanation!.trim().isNotEmpty) ...[
+            const SizedBox(height: 32),
+            _AiExplanationTile(explanation: chunk.aiExplanation!),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _AiExplanationTile extends StatefulWidget {
+  const _AiExplanationTile({required this.explanation});
+
+  final String explanation;
+
+  @override
+  State<_AiExplanationTile> createState() => _AiExplanationTileState();
+}
+
+class _AiExplanationTileState extends State<_AiExplanationTile> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: OmoweColors.stone50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: OmoweColors.stone300),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          title: Text(
+            'AI Explanation',
+            style: OmoweTypography.uiBody.copyWith(
+              fontWeight: FontWeight.w600,
+              color: OmoweColors.ink900,
+            ),
+          ),
+          leading: Icon(Icons.auto_awesome, color: OmoweColors.ink500),
+          initiallyExpanded: false,
+          onExpansionChanged: (expanded) =>
+              setState(() => _isExpanded = expanded),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: MarkdownBody(
+                data: widget.explanation,
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                    .copyWith(
+                      p: OmoweTypography.readingBody.copyWith(
+                        fontSize: 15,
+                        height: 1.5,
+                      ),
+                      blockSpacing: 14.0,
+                    ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

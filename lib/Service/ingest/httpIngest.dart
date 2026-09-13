@@ -108,6 +108,13 @@ class HttpIngestService implements IngestService {
     final content =
         map['content'] ?? map['text'] ?? map['markdown'] ?? map['piece'];
     if (content != null && content.toString().trim().isNotEmpty) {
+      // Extract possible AI explanation key variants from backend payload
+      final explanation =
+          map['aiExplanation'] ??
+          map['ai_explanation'] ??
+          map['explanation'] ??
+          map['ai_summary'];
+
       return [
         Chunk(
           title:
@@ -116,6 +123,7 @@ class HttpIngestService implements IngestService {
               chapterTitle ??
               'Untitled chapter',
           content: content.toString(),
+          aiExplanation: explanation?.toString(),
         ),
       ];
     }
