@@ -220,7 +220,7 @@ class _LibraryGrid extends ConsumerWidget {
         }
         return LayoutBuilder(
           builder: (context, constraints) {
-            final crossAxisCount = constraints.maxWidth >= 700
+            final _ = constraints.maxWidth >= 700
                 ? 4
                 : constraints.maxWidth >= 520
                 ? 3
@@ -228,11 +228,12 @@ class _LibraryGrid extends ConsumerWidget {
 
             return GridView.builder(
               padding: const EdgeInsets.only(bottom: 22),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: crossAxisCount == 2 ? 1.12 : 1.18,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16, // Horizontal gap between columns
+                mainAxisSpacing: 16, // Vertical gap between rows
+                // Increase aspect ratio (width / height) to shrink vertical cell height
+                childAspectRatio: 1.3,
               ),
               itemCount: books.length,
               itemBuilder: (context, index) {
